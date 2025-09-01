@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:16
+    container_name: hathi-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: hathi
+      POSTGRES_USER: hathi
+      POSTGRES_PASSWORD: hathi_pw
+    ports:
+      - "5432:5432"
+    volumes:
+      - hathi_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hathi -d hathi"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Tuỳ chọn: pgAdmin để xem DB bằng UI
+  pgadmin:
+    image: dpage/pgadmin4:8
+    container_name: hathi-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@hathi.local
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "5050:80"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  hathi_pgdata:
+# http://<server-ip>:5050 → Add New Server → Host: db, User: hathi, Password: hathi_pw, Database: hathi.
