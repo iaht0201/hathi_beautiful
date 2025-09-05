@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/utils/slugify";
+import { createCategoryInput } from "@/lib/validation/category";
 
 export async function GET() {
   const items = await prisma.category.findMany({
@@ -10,32 +11,28 @@ export async function GET() {
   return NextResponse.json(items);
 }
 
+// app/api/categories/route.ts
+
 export async function POST(req: Request) {
-  const { name, description } = (await req.json()) as {
-    name?: string;
-    description?: string | null;
-  };
+  const json = await req.json();
+  const data = createCategoryInput.parse(json);
 
-  const n = (name ?? "").trim();
-  if (!n) return NextResponse.json({ message: "Thiếu tên" }, { status: 400 });
-
-  const slug = slugify(n);
-
-  const existed = await prisma.category.findFirst({
-    where: { slug },
-    select: { id: true },
-  });
-  if (existed) {
-    return NextResponse.json(
-      { message: "Tên/slug đã tồn tại" },
-      { status: 409 }
-    );
-  }
+  // đảm bảo chỉ có 1 isPrimary === true
+  const hasPrimary = data.images.some((i) => i.isPrimary);
+  const images = hasPrimary
+    ? data.images.map((img, idx) => ({
+        ...img,
+        isPrimary: idx === data.images.findIndex((i) => i.isPrimary),
+      }))
+    : data.images;
 
   const created = await prisma.category.create({
-    data: { name: n, slug },
-    select: { id: true, name: true },
+    data: {
+      name: data.name,
+      slug: data.slug,
+      images: { create: images },
+    },
+    include: { images: true },
   });
-
-  return NextResponse.json(created, { status: 201 });
+  return NextResponse.json(created);
 }
