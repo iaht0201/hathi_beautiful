@@ -89,3 +89,41 @@ model Category {
 
     @@index([name])
 }
+
+model HeroSlide {
+    id           String     @id @default(cuid())
+    href         String
+    alt          String
+    image        ImageSlide @relation(fields: [imageSlideId], references: [id]) // đổi tên
+    imageSlideId String
+
+    position Int? // hoặc @default(0)
+    active   Boolean   @default(true)
+    startAt  DateTime?
+    endAt    DateTime?
+
+    caption   CaptionHeroSlide? @relation(fields: [captionId], references: [id])
+    captionId String?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([active, startAt, endAt])
+    @@index([position])
+}
+
+model ImageSlide {
+    id         String      @id @default(cuid())
+    mobileUrl  String
+    desktopUrl String
+    HeroSlide  HeroSlide[]
+}
+
+model CaptionHeroSlide {
+    id        String      @id @default(cuid())
+    title     String?
+    subtitle  String?
+    ctaHref   String?
+    ctaLabel  String?
+    HeroSlide HeroSlide[]
+}

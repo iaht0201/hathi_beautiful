@@ -22,6 +22,7 @@ export default async function AdminProtectedLayout({
             </Link>
             <Link href="/admin/brands">Hãng</Link>
             <Link href="/admin/categories">Danh mục</Link>
+            <Link href="/admin/hero-slides">Hero Slides</Link>
           </nav>
           <form action={logout}>
             <button type="submit" className="text-sm underline">
